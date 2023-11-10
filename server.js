@@ -1,18 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const http = require("http");
-const socketIo = require("socket.io");
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
 const port = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
-//will add player account integration
 let board = Array(9).fill(null);
 let player = "X";
 let player1Name = "Player 1";
@@ -44,39 +38,28 @@ const checkWinner = () => {
   }
 };
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
+app.post("/move", (req, res) => {
+  const { index } = req.body;
 
-  // handle connection and init
-  io.emit("gameState", { board, player, player1Name, player2Name, winner });
+  if (!board[index] && !winner) {
+    const newBoard = board.slice();
+    newBoard[index] = player;
+    board = newBoard;
+    player = player === "X" ? "O" : "X";
+    checkWinner();
+  }
 
-  socket.on("makeMove", (index) => {
-    if (!board[index] && !winner) {
-      const newBoard = board.slice();
-      newBoard[index] = player;
-      board = newBoard;
-      player = player === "X" ? "O" : "X";
-      checkWinner();
-
-      // Send updated game state to all connected clients
-      io.emit("gameState", { board, player, player1Name, player2Name, winner });
-    }
-  });
-
-  socket.on("resetGame", () => {
-    board = Array(9).fill(null);
-    player = "X";
-    winner = null;
-
-    // Send updated game state to all connected clients
-    io.emit("gameState", { board, player, player1Name, player2Name, winner });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
+  res.json({ board, winner });
 });
 
-server.listen(port, () => {
+app.post("/reset", (req, res) => {
+  board = Array(9).fill(null);
+  player = "X";
+  winner = null;
+
+  res.json({ board, winner });
+});
+
+app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
