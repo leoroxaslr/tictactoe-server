@@ -38,7 +38,7 @@ const checkWinner = () => {
   }
 };
 
-app.post("/make-move", (req, res) => {
+app.post("/move", (req, res) => {
   const { index } = req.body;
 
   if (!board[index] && !winner) {
@@ -52,7 +52,7 @@ app.post("/make-move", (req, res) => {
   res.json({ board, winner });
 });
 
-app.post("/reset-game", (req, res) => {
+app.post("/reset", (req, res) => {
   board = Array(9).fill(null);
   player = "X";
   winner = null;
